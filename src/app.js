@@ -67,7 +67,7 @@ app.get('/callback', (req, res) => {
 	const state = req.query.state;
 	const tokenConfig = {
 		code: req.query.code,
-		redirect_uri: 'http://localhost:3500/callback',
+		redirect_uri: 'https://create-repo-server.herokuapp.com/callback',
 		scope: 'repo', // also can be an array of multiple scopes, ex. ['<scope1>, '<scope2>', '...']
 	};
 	const httpOptions = {};
@@ -83,7 +83,7 @@ app.get('/', (req, res) => {
 
 
 	const authorizationUri = oauth2.authorizationCode.authorizeURL({
-		redirect_uri: 'http://localhost:3500/callback',
+		redirect_uri: 'https://create-repo-server.herokuapp.com/callback',
 		scope: 'repo', // also can be an array of multiple scopes, ex. ['<scope1>, '<scope2>', '...']
 		state: `${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 6)}${Math.random().toString(16).substring(2, 6)}${Math.random().toString(16).substring(2, 6)}${Math.random().toString(16).substring(2, 14)}`
 	});
