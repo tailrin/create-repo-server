@@ -10,6 +10,7 @@ const token = {
 	access_token: ""
 }
 const gitUrl = [];
+const code =[]
 const app = express();
 const credentials = {
 	client: {
@@ -71,25 +72,26 @@ const createGitRepo = () => {
     })
 }
 
-const createRepo = async (req, res) => {
+const createRepo = async (res) => {
 	const tokenConfig = {
-		code: req.query.code,
+		code: code[0],
 		redirect_uri: process.env.REDIRECT_URI,
 		scope: 'repo', // also can be an array of multiple scopes, ex. ['<scope1>, '<scope2>', '...']
 	};
 	const httpOptions = {};
 	await getToken(tokenConfig, httpOptions);
 	await createGitRepo();
-	res.json("You have been verified please return to the app your terminal!")
+	res.json(gitUrl[0])
 }
 
 app.get('/get-git-url', (req, res) => {
-	res.json(gitUrl[0])
+	createRepo(res);
 })
 
 
 app.get('/callback', (req, res) => {
-	createRepo(req, res);
+	code.push(req.query.code);
+	res.json("You have been verified please return to the app your terminal!")
 })
 
 
