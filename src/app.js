@@ -1,16 +1,22 @@
 require('dotenv').config();
-const fetch = require('node-fetch');
+const exec = require('child_process').exec;
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const helmet = require('helmet');
 const NODE_ENV = process.env.NODE_ENV
-const appName1 = [];
+const newApp = {
+	name: ''
+};
 const token = {
 	access_token: ""
 }
-const gitUrl = [];
-const code =[]
+const git = {
+	url: ""
+};
+const code = {
+	code: ''
+}
 const app = express();
 const credentials = {
 	client: {
@@ -50,7 +56,8 @@ app.use(function errorHandler(error, req, res, next){
 const getToken = async (tokenConfig, httpOptions) => {
 	try {
 		const result = await oauth2.authorizationCode.getToken(tokenConfig, httpOptions);
-		token.access_token = result.access_token
+		token.access_token = await result.access_token
+		
 	} catch (error) {
 		console.log('Access Token Error', error.message);
 	}
@@ -58,14 +65,14 @@ const getToken = async (tokenConfig, httpOptions) => {
 
 const createGitRepo = () => {
     return new Promise((res, rej) => {
-        exec(`curl -H "Authorization: token ${token.access_token}" --data '{"name":"${appName[0]}"}' https://api.github.com/user/repos`, (err, stdout, stderr) => {
+        exec(`curl -H "Authorization: token ${token.access_token}" --data '{"name":"${newApp.name}"}' https://api.github.com/user/repos`, (err, stdout, stderr) => {
             if (err) {
                 //some err occurred
                 console.error(err);
             } else {
-                // the *entire* stdout and stderr (buffered)
-                const response = JSON.parse(stdout);
-                gitUrl.push(response.clone_url);
+				// the *entire* stdout and stderr (buffered)
+				const response = JSON.parse(stdout);
+                git.url = response.clone_url;
             }
             res();
         });
@@ -74,31 +81,35 @@ const createGitRepo = () => {
 
 const createRepo = async (res) => {
 	const tokenConfig = {
-		code: code[0],
+		code: code.code,
 		redirect_uri: process.env.REDIRECT_URI,
 		scope: 'repo', // also can be an array of multiple scopes, ex. ['<scope1>, '<scope2>', '...']
 	};
 	const httpOptions = {};
-	await getToken(tokenConfig, httpOptions);
-	await createGitRepo();
-	res.json(gitUrl[0])
+	getToken(tokenConfig, httpOptions).then(() => createGitRepo()).then(() => {
+		res.json(git.url)
+	})	
 }
 
 app.get('/get-git-url', (req, res) => {
 	createRepo(res);
 })
 
-
+app.get('/backup', (req, res) => {
+	res.send(git.url)
+})
 app.get('/callback', (req, res) => {
-	code.push(req.query.code);
+	code.code = req.query.code;
 	res.json("You have been verified please return to the app your terminal!")
 })
 
 
 
 app.get('/', (req, res) => {
-	console.log(req.params)
-	appName1.push(req.query.appName);
+	token.access_token = ''
+	code.code = ''
+	git.url = ''
+	newApp.name = req.query.appName;
 	const authorizationUri = oauth2.authorizationCode.authorizeURL({
 		redirect_uri: process.env.REDIRECT_URI,
 		scope: 'repo', // also can be an array of multiple scopes, ex. ['<scope1>, '<scope2>', '...']
