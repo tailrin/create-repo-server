@@ -96,7 +96,7 @@ app.get('/get-git-url', (req, res) => {
 })
 
 app.get('/backup', (req, res) => {
-	res.send(git.url)
+	res.json(git)
 })
 app.get('/callback', (req, res) => {
 	code.code = req.query.code;
